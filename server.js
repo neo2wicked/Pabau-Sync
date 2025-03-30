@@ -6,8 +6,8 @@ const app = express();
 
 app.use(bodyParser.json());
 
-const PABAU_API_KEY = "EvtciAXr2nyeFlqoohUhFWBWKKflgIoqjLhvhXhBMBtcG7qnAT6r3ei9pdI6vGkB";
-const PABAU_BASE_URL = "https://crm.pabau.com/api/v3"; // Updated per API docs
+const PABAU_API_KEY = "92f67a6bfa0hhfdb09fddgh690j266hj94ae4cb625aed291ac89geigbf065ggb";
+const PABAU_BASE_URL = "https://api.pabau.com"; // Updated base URL
 
 // Utility functions
 function timeToMinutes(time) {
@@ -61,7 +61,7 @@ app.post("/webhook", async (req, res) => {
     }
 
     const createClient = await axios.post(
-      `${PABAU_BASE_URL}/contact/create`,
+      `${PABAU_BASE_URL}/v3/contact/create`,
       { name, email, phone, note: `Source: ${utmSource}` },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
@@ -70,7 +70,7 @@ app.post("/webhook", async (req, res) => {
     console.log("✅ Client created with ID:", clientId);
 
     const createAppointment = await axios.post(
-      `${PABAU_BASE_URL}/appointment/create`,
+      `${PABAU_BASE_URL}/v3/appointment/create`,
       { contact_id: clientId, service_name: service, datetime: bookingTime },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
@@ -89,7 +89,7 @@ app.get("/", (req, res) => {
 
 app.get("/availability", async (req, res) => {
   try {
-    const staffResponse = await axios.get(`${PABAU_BASE_URL}/staff`, {
+    const staffResponse = await axios.get(`${PABAU_BASE_URL}/v3/staff`, {
       headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" }
     });
 
@@ -101,11 +101,11 @@ app.get("/availability", async (req, res) => {
     const staffId = staffList[0].id;
     const today = new Date().toISOString().split("T")[0];
 
-    const scheduleResponse = await axios.get(`${PABAU_BASE_URL}/schedule/staff-hours?staff_id=${staffId}&date=${today}`, {
+    const scheduleResponse = await axios.get(`${PABAU_BASE_URL}/v3/schedule/staff-hours?staff_id=${staffId}&date=${today}`, {
       headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" }
     });
 
-    const appointmentsResponse = await axios.get(`${PABAU_BASE_URL}/appointments?staff_id=${staffId}&date=${today}`, {
+    const appointmentsResponse = await axios.get(`${PABAU_BASE_URL}/v3/appointments?staff_id=${staffId}&date=${today}`, {
       headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" }
     });
 
