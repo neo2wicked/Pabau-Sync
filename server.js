@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const PABAU_API_KEY = "EvtciAXr2nyeFlqoohUhFWBWKKflgIoqjLhvhXhBMBtcG7qnAT6r3ei9pdI6vGkB";
-const PABAU_BASE_URL = "https://api.pabau.com"; // Replace if different
+const PABAU_BASE_URL = "https://crm.pabau.com/api/v3"; // Updated per API docs
 
 // Utility functions
 function timeToMinutes(time) {
@@ -60,30 +60,18 @@ app.post("/webhook", async (req, res) => {
       return res.status(400).send({ error: "Missing email or booking time" });
     }
 
-    const conflictCheck = await axios.get(`${PABAU_BASE_URL}/appointments?datetime=${bookingTime}`, {
-      headers: {
-        Authorization: `Bearer ${PABAU_API_KEY}`,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (conflictCheck.data && conflictCheck.data.length > 0) {
-      console.log("⚠️ Conflict: Slot already booked at", bookingTime);
-      return res.status(409).send({ error: "Time slot already booked" });
-    }
-
     const createClient = await axios.post(
-      `${PABAU_BASE_URL}/clients`,
-      { name, email, phone, notes: `Source: ${utmSource}` },
+      `${PABAU_BASE_URL}/contact/create`,
+      { name, email, phone, note: `Source: ${utmSource}` },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
 
-    const clientId = createClient.data.id;
+    const clientId = createClient.data?.data?.contact_id;
     console.log("✅ Client created with ID:", clientId);
 
     const createAppointment = await axios.post(
-      `${PABAU_BASE_URL}/appointments`,
-      { client_id: clientId, service, datetime: bookingTime },
+      `${PABAU_BASE_URL}/appointment/create`,
+      { contact_id: clientId, service_name: service, datetime: bookingTime },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
 
