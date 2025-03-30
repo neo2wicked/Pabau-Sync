@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const PABAU_API_KEY = "92f67a6bfa0hhfdb09fddgh690j266hj94ae4cb625aed291ac89geigbf065ggb";
-const PABAU_BASE_URL = "https://api.pabau.com"; // Updated base URL
+const PABAU_BASE_URL = "https://api.pabau.com"; // Final corrected base URL
 
 // Utility functions
 function timeToMinutes(time) {
@@ -61,24 +61,40 @@ app.post("/webhook", async (req, res) => {
     }
 
     const createClient = await axios.post(
-      `${PABAU_BASE_URL}/v3/contact/create`,
-      { name, email, phone, note: `Source: ${utmSource}` },
+      `${PABAU_BASE_URL}/core/api/client/addclient`,
+      {
+        first_name: name || "Unknown",
+        email,
+        mobile: phone,
+        source: utmSource
+      },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
 
-    const clientId = createClient.data?.data?.contact_id;
+    const clientId = createClient.data?.data?.contact_id || createClient.data?.contact_id;
     console.log("✅ Client created with ID:", clientId);
 
     const createAppointment = await axios.post(
-      `${PABAU_BASE_URL}/v3/appointment/create`,
-      { contact_id: clientId, service_name: service, datetime: bookingTime },
+      `${PABAU_BASE_URL}/core/api/appointment/addappointment`,
+      {
+        client_id: clientId,
+        start_date: bookingTime,
+        service: service
+      },
       { headers: { Authorization: `Bearer ${PABAU_API_KEY}`, "Content-Type": "application/json" } }
     );
 
     console.log("✅ Appointment booked:", createAppointment.data);
     res.status(200).send({ status: "success" });
   } catch (err) {
-    console.error("❌ Webhook error:", err.response?.data || err.message);
+    const errorDetails = {
+      message: err.message,
+      responseData: err.response?.data,
+      requestUrl: err.config?.url,
+      requestBody: err.config?.data,
+      status: err.response?.status
+    };
+    console.error("❌ Webhook error details:", JSON.stringify(errorDetails, null, 2));
     res.status(500).send({ error: "Internal Server Error" });
   }
 });
