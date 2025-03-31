@@ -4,8 +4,6 @@ export default async function handler(req, res) {
     }
   
     console.log("📥 Pabau webhook received:", JSON.stringify(req.body, null, 2));
-    // Add any internal sync or logging logic here
-  
-    return res.status(200).json({ status: "received" });
+    res.status(200).json({ received: true });
   }
   

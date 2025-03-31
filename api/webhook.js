@@ -21,7 +21,6 @@ export default async function handler(req, res) {
     const utmSource = data.tracking?.utm_source || "unknown";
 
     if (!email || !bookingTime) {
-      console.warn("⚠️ Missing required fields in payload:", calendlyPayload);
       return res.status(400).json({ error: "Missing email or booking time" });
     }
 
